@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using System.Numerics;
 using System.Collections.Generic;
 using System;
@@ -69,21 +68,52 @@ public class Player
     userInfo["CURRENT_HP"] = userInfo["HP"];
   }
 
-  public void Move(int direction)
+  public void Move(int direction, Vector2 roomSize)
   {
+    int halfX = (int)Math.Floor(roomSize.X / 2);
+    int halfY = (int)Math.Floor(roomSize.Y / 2);
+
     switch (direction)
     {
       case 0:
-        position.X++;
+        if (position.X < halfX)
+        {
+          position.X++;
+        }
+        else
+        {
+          Console.WriteLine("동쪽 끝에 도달했습니다.");
+        }
         break;
       case 1:
-        position.X--;
+        if (position.X > -halfX)
+        {
+          position.X--;
+        }
+        else
+        {
+          Console.WriteLine("서쪽 끝에 도달했습니다.");
+        }
         break;
       case 2:
-        position.Y--;
+        if (position.Y > -halfY)
+        {
+          position.Y--;
+        }
+        else
+        {
+          Console.WriteLine("남쪽 끝에 도달했습니다.");
+        }
         break;
       case 3:
-        position.Y++;
+        if (position.Y < halfX)
+        {
+          position.Y++;
+        }
+        else
+        {
+          Console.WriteLine("남쪽 끝에 도달했습니다.");
+        }
         break;
       default:
         Console.WriteLine("유효하지 않은 입력입니다.");
