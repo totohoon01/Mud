@@ -15,11 +15,11 @@ public class GameManager
   }
 
   private Player player;
-  private NPC npc;
-  private Enemy enemy;
   private Room room;
   private Vector2 roomSize;
   public STATE state;
+  private bool isGetItem = false;
+  private Enemy monster;
 
   public GameManager()
   {
@@ -27,9 +27,6 @@ public class GameManager
     player = new Player();
     room = new Room();
     roomSize = room.RoomSize;
-    // npc = new NPC();
-    // enemy = new Enemy();
-    // player.UserInfo;
   }
 
   public void START()
@@ -38,17 +35,10 @@ public class GameManager
     {
       State_Statements(state);
 
-      //STATE ACTION
       int action = Convert.ToInt32(Console.ReadLine());
       if (action == -1) break;
 
       State_Actions(state, action);
-
-      //Delay
-      Console.WriteLine("");
-      Console.WriteLine("계속하려면 Enter...");
-      Console.Read();
-      Console.Clear();
     }
   }
 
@@ -56,7 +46,7 @@ public class GameManager
   {
     if (state == STATE.LOBBY)
     {
-      Console.WriteLine("던전으로 이동:0 상점으로 이동:1 [그만하기:-1]");
+      Console.WriteLine("던전으로 이동:0 보급소로 이동:1 [그만하기:-1]");
       Console.Write("어디로 갈까요: ");
     }
 
@@ -67,13 +57,13 @@ public class GameManager
     }
     else if (state == STATE.FIGHT)
     {
-      Console.WriteLine("공격:0 아이템 사용:1 도망(50%):2 [그만하기:-1]");
+      Console.WriteLine("공격:0 도망(50%):1 [그만하기:-1]");
       Console.Write("행동을 선택하세요: ");
     }
     else if (state == STATE.SHOP)
     {
-      Console.WriteLine("구매하기:0 나가기:1 [그만하기:-1]");
-      Console.Write("무엇을 할까요: ");
+      Console.WriteLine("전투에 도움이 되는 효과를 드립니다.");
+      Console.WriteLine("받는다:0 받지 않는다:1 [그만하기:-1]");
     }
     else if (state == STATE.EVENT)
     {
@@ -83,11 +73,11 @@ public class GameManager
 
   private void State_Actions(STATE state, int action)
   {
-
     if (state == STATE.LOBBY)
     {
       if (action == 0)
       {
+        room = new Room();
         SET_STATE(STATE.ADVENTURE);
       }
       else if (action == 1)
@@ -100,43 +90,118 @@ public class GameManager
       if (action != 4)
       {
         player.Move(action, roomSize);
-        //bool isMeet = enemy.check(player.position);
-        //if(isMeet) SET_STATE(STATE.FIGHT);
-
-        //bool isEVENT = event.check(player.position);
-        //if(isMeet) SET_STATE(STATE.EVENT)
+        monster = room.CheckEncounter(player.position);
+        if (monster != null)
+        {
+          SET_STATE(STATE.FIGHT);
+        }
       }
       else
       {
+        isGetItem = false;
+        player.position = new Vector2(0, 0);
+        player.SetStatus("ATK", player.userInfo["Level"] * 10);
         SET_STATE(STATE.LOBBY);
       }
-      //현재 위치에 무엇이 있는지 체크
-      //이벤트가 있다면 해당 스테이트로 이동
     }
 
     else if (state == STATE.FIGHT)
     {
-      //전투 스테이트
-      //플레이어 입력 -> 공격 / 도망 / 아이템 사용
-      //몬스터 입력 -> 공격
-      //승리시 -> 경험치 상승, 다시 어드벤쳐로
-      //패배시 -> 이벤트, 로비로 이동
+      if (action == 0)
+      {
+        monster.Attacked(player.userInfo["ATK"]);
+        bool isDie = monster.CheckCondition();
+        if (isDie)
+        {
+          monster.Die();
+          player.LevelUP();
+          SET_STATE(STATE.ADVENTURE);
+        }
+        else
+        {
+          player.Attacked(monster.enemyInfo["ATK"]);
+        }
+        isDie = player.CheckCondition();
+        if (isDie)
+        {
+          player.Die();
+          SET_STATE(STATE.LOBBY);
+        }
+      }
+      else if (action == 1)
+      {
+        Random rnd = new Random();
+        int dice = rnd.Next(0, 2);
+        if (dice == 0)
+        {
+          Console.WriteLine("무사히 도망쳤다.");
+          player.position = new Vector2(0, 0);
+          SET_STATE(STATE.LOBBY);
+        }
+        else
+        {
+          Console.WriteLine("도망에 실패했다");
+          player.Attacked(monster.enemyInfo["ATK"]);
+          bool isDie = player.CheckCondition();
+          if (isDie)
+          {
+            player.Die();
+            SET_STATE(STATE.LOBBY);
+          }
+        }
+      }
     }
     else if (state == STATE.SHOP)
     {
-      //상점 스테이트
-      //플레이어 입력 -> (구매, 아이템, 개수), 나가기
-      //소지금이 충분하면 추가
+      if (action == 0)
+      {
+        if (!isGetItem)
+        {
+          Random rnd = new Random();
+          Item item = new Item(rnd.Next(0, 2));
+          if (item.itemType == 0)
+          {
+            Console.WriteLine("체력을 회복했다!");
+            player.userInfo["CURRENT_HP"] += player.userInfo["HP"] / 2;
+            if (player.userInfo["CURRENT_HP"] > player.userInfo["HP"])
+            {
+              player.userInfo["CURRENT_HP"] = player.userInfo["HP"];
+            }
+          }
+          else if (item.itemType == 1)
+          {
+            Console.WriteLine("공격력이 상승했다!");
+            player.userInfo["ATK"] += rnd.Next(1, 11);
+          }
+          isGetItem = true;
+        }
+        else
+        {
+          Console.WriteLine("다음 아이템을 받으려면 던전을 진행해 주세요.");
+        }
+      }
+      else if (action == 1)
+      {
+        SET_STATE(STATE.LOBBY);
+      }
+      else if (action == 2)
+      {
+        player.userInfo["ATK"] += 10000;
+      }
+      player.Description();
+      SET_STATE(STATE.LOBBY);
     }
+
     else if (state == STATE.EVENT)
     {
-      //아이템 획득 / 함정 같은 이벤트
-      //DoSomething();
       SET_STATE(STATE.ADVENTURE);
     }
   }
   public void SET_STATE(STATE _state)
   {
     state = _state;
+    Console.WriteLine("계속하려면 Enter...");
+    Console.Read();
+    Console.Clear();
   }
 }

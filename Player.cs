@@ -9,45 +9,16 @@ public class Player
     WARRIOR,
     MAGE,
   }
-  private string name;
+  private string? name;
 
-  private Dictionary<string, int> userInfo = new Dictionary<string, int>(){
+  public Dictionary<string, int> userInfo = new Dictionary<string, int>(){
         {"Class", (int)userClass.WARRIOR},
         {"Level", 1},
         {"CURRENT_HP", 100},
         {"HP", 100},
         {"ATK", 10},
     };
-  public Dictionary<string, int> UserInfo
-  {
-    get
-    {
-      Console.WriteLine("******************");
-      Console.WriteLine($"Name : {name}");
-      foreach (var item in userInfo)
-      {
-        if (item.Key == "Class")
-        {
-          Console.WriteLine($"{item.Key} : {(userClass)item.Value}");
-        }
-        else
-        {
-          Console.WriteLine($"{item.Key} : {item.Value}");
-        }
-      }
-      Console.WriteLine("******************");
-      return userInfo;
-    }
-  }
-  private Vector2 position = new Vector2(0, 0);
-  public Vector2 Position
-  {
-    get
-    {
-      return position;
-    }
-  }
-
+  public Vector2 position = new Vector2(0, 0);
   public Player()
   {
     Console.Write("당신의 이름은? ");
@@ -55,8 +26,9 @@ public class Player
     Console.WriteLine($"환영합니다! {name}");
   }
 
-  private void LevelUP()
+  public void LevelUP()
   {
+    Console.WriteLine("Level UP!!");
     foreach (var item in userInfo)
     {
       if (item.Key != "Class" && item.Key != "Level")
@@ -120,5 +92,57 @@ public class Player
         break;
     }
     Console.WriteLine($"현재 위치: ({position.X}, {position.Y})");
+  }
+  public void Attacked(int atk)
+  {
+    userInfo["CURRENT_HP"] -= atk;
+    Console.Write($"몬스터에게 {atk}의 데미지를 받았다. ");
+    if (userInfo["CURRENT_HP"] > 0)
+    {
+      Console.WriteLine($"Player HP:{userInfo["CURRENT_HP"]}");
+    }
+    else
+    {
+      Console.WriteLine("눈 앞이 깜깜해졌다.");
+    }
+  }
+  public bool CheckCondition()
+  {
+    if (userInfo["CURRENT_HP"] < 0)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  public void Die()
+  {
+    //사망 이벤트
+    userInfo["CURRENT_HP"] = userInfo["HP"];
+    position = new Vector2(0, 0);
+  }
+  public void SetStatus(string key, int value)
+  {
+    userInfo[key] = value;
+  }
+  public void Description()
+  {
+    Console.WriteLine("********************");
+    Console.WriteLine($"Name: {name}");
+    foreach (var item in userInfo)
+    {
+      if (item.Key == "Class")
+      {
+        Console.WriteLine($"{item.Key}: {(userClass)item.Value}");
+      }
+      else
+      {
+        Console.WriteLine($"{item.Key}: {item.Value}");
+      }
+    }
+    Console.WriteLine("********************");
   }
 }

@@ -2,15 +2,20 @@ using System;
 
 public class Item
 {
-  private int itemType;
-  private int price;
-
-  public Item()
+  public int itemType;
+  public Item(int _itemType)
   {
-    Console.Write("Create Item");
+    itemType = _itemType;
   }
   public void Description(int itemType)
   {
-    Console.WriteLine("아이템 설명");
+    if (itemType == 0)
+    {
+      Console.Write("체력 포션: 체력을 50% 회복한다.");
+    }
+    else if (itemType == 1)
+    {
+      Console.Write("공격력 증가 물약: 다음 전투에서 공격력을 1 ~ 10 증가시킨다.");
+    }
   }
 }
